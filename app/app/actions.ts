@@ -118,7 +118,7 @@ export async function attachListing(
     db.prepare(
       `UPDATE items SET
          vinted_url = ?,
-         photo = COALESCE(photo, ?),
+         listing_photo = ?,
          listed_price_cents = ?,
          brand = COALESCE(brand, ?),
          size = COALESCE(size, ?),
@@ -138,7 +138,7 @@ export async function attachListing(
     );
 
     revalidateAll();
-    const gotPhoto = !item.photo && listing.image !== null;
+    const gotPhoto = listing.image !== null;
     const gotPrice = priceCents !== null;
     const extras =
       gotPhoto && gotPrice
@@ -172,7 +172,7 @@ export async function updateItem(formData: FormData) {
     `UPDATE items SET
        name = ?, brand = ?, category = ?, size = ?, condition = ?,
        cost_cents = ?, extra_cents = ?,
-       listed_price_cents = ?, vinted_url = ?, photo = ?,
+       listed_price_cents = ?, vinted_url = ?, photo = ?, listing_photo = ?,
        sold_price_cents = CASE WHEN status = 'sold' THEN ? ELSE sold_price_cents END,
        sold_fees_cents = ?, sold_shipping_cents = ?,
        sold_at = CASE WHEN status = 'sold' THEN COALESCE(?, sold_at) ELSE sold_at END,
@@ -190,6 +190,7 @@ export async function updateItem(formData: FormData) {
     parseMoney(formData.get("listed_price")),
     text(formData.get("vinted_url")),
     photo,
+    text(formData.get("listing_photo")),
     parseMoney(formData.get("sold_price")) ?? 0,
     parseMoney(formData.get("sold_fees")) ?? 0,
     parseMoney(formData.get("sold_shipping")) ?? 0,

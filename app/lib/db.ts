@@ -36,6 +36,7 @@ export interface Item {
   platform: string | null;
   notes: string | null;
   photo: string | null;
+  listing_photo: string | null;
   created_at: string;
 }
 
@@ -81,6 +82,7 @@ CREATE TABLE IF NOT EXISTS items (
   platform TEXT,
   notes TEXT,
   photo TEXT,
+  listing_photo TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -108,10 +110,13 @@ function open(): Database.Database {
   db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");
   db.exec(SCHEMA);
-  // migração: bases criadas antes da coluna "photo"
+  // migrações: bases criadas antes de colunas novas
   const cols = db.prepare("PRAGMA table_info(items)").all() as { name: string }[];
   if (!cols.some((c) => c.name === "photo")) {
     db.exec("ALTER TABLE items ADD COLUMN photo TEXT");
+  }
+  if (!cols.some((c) => c.name === "listing_photo")) {
+    db.exec("ALTER TABLE items ADD COLUMN listing_photo TEXT");
   }
   return db;
 }

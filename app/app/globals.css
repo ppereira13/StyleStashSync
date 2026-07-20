@@ -76,3 +76,53 @@ textarea:focus {
   outline: 2px solid var(--series-1);
   outline-offset: 0;
 }
+
+/* ---- pills de estado dos artigos ---- */
+:root {
+  --pill-stock-fg: #8a5a00;
+  --pill-stock-bg: rgba(237, 161, 0, 0.14);
+  --pill-listed-fg: #1c5cab;
+  --pill-listed-bg: rgba(42, 120, 214, 0.13);
+  --pill-sold-fg: #006300;
+  --pill-sold-bg: rgba(12, 163, 12, 0.13);
+  --pill-returned-fg: #b03434;
+  --pill-returned-bg: rgba(227, 73, 72, 0.12);
+  --row-hover: rgba(11, 11, 11, 0.03);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pill-stock-fg: #e8b558;
+    --pill-stock-bg: rgba(237, 161, 0, 0.16);
+    --pill-listed-fg: #7fb1ef;
+    --pill-listed-bg: rgba(57, 135, 229, 0.18);
+    --pill-sold-fg: #6cc96c;
+    --pill-sold-bg: rgba(12, 163, 12, 0.16);
+    --pill-returned-fg: #ef8b8b;
+    --pill-returned-bg: rgba(230, 103, 103, 0.16);
+    --row-hover: rgba(255, 255, 255, 0.04);
+  }
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.pill-stock { color: var(--pill-stock-fg); background: var(--pill-stock-bg); }
+.pill-listed { color: var(--pill-listed-fg); background: var(--pill-listed-bg); }
+.pill-sold { color: var(--pill-sold-fg); background: var(--pill-sold-bg); }
+.pill-returned { color: var(--pill-returned-fg); background: var(--pill-returned-bg); }
+
+/* linhas da tabela de artigos ganham vida no hover */
+.rows tr {
+  transition: background-color 0.12s ease;
+}
+.rows tr:hover {
+  background: var(--row-hover);
+}

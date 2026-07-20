@@ -26,10 +26,9 @@ function extFromUrl(url: string): string {
   return m ? m[1].toLowerCase().replace("jpeg", "jpg") : "webp";
 }
 
-/** Resolve a foto de um artigo para um ficheiro dentro de site/assets/pecas.
+/** Resolve uma foto para um ficheiro dentro de site/assets/pecas.
  *  Devolve o caminho relativo ao site, ou o URL remoto se o download falhar. */
-async function resolvePhoto(item: Item): Promise<string | null> {
-  const photo = item.photo!;
+async function resolvePhoto(item: Item, photo: string): Promise<string | null> {
   if (photo.startsWith("/api/photos/")) {
     const name = photo.slice("/api/photos/".length);
     if (!/^[\w.-]+$/.test(name)) return null;
@@ -67,33 +66,33 @@ export async function exportMontra(): Promise<{ pecas: number; ficheiro: string 
     .prepare(
       `SELECT * FROM items
        WHERE status IN ('listed','in_stock')
-         AND (photo IS NOT NULL OR vinted_url IS NOT NULL)
+         AND (photo IS NOT NULL OR listing_photo IS NOT NULL OR vinted_url IS NOT NULL)
        ORDER BY CASE status WHEN 'listed' THEN 0 ELSE 1 END,
                 listed_at DESC, created_at DESC
        LIMIT 80`,
     )
     .all() as Item[];
 
-  // Artigos com link do anúncio mas sem foto: vamos buscá-la (e o preço) ao
-  // anúncio na Vinted uma única vez, e fica guardada na base para o futuro.
-  const setPhoto = db.prepare("UPDATE items SET photo = ? WHERE id = ?");
+  // Artigos com link do anúncio mas sem foto do anúncio: vamos buscá-la (e o
+  // preço) à Vinted uma única vez, e fica guardada na base para o futuro.
+  const setListingPhoto = db.prepare("UPDATE items SET listing_photo = ? WHERE id = ?");
   const setListedPrice = db.prepare(
     "UPDATE items SET listed_price_cents = ? WHERE id = ? AND listed_price_cents IS NULL",
   );
   for (const item of items) {
-    if (item.photo || !item.vinted_url) continue;
+    if (item.listing_photo || !item.vinted_url) continue;
     try {
       const listing = await fetchVintedListing(item.vinted_url);
       if (listing.image) {
-        setPhoto.run(listing.image, item.id);
-        item.photo = listing.image;
+        setListingPhoto.run(listing.image, item.id);
+        item.listing_photo = listing.image;
       }
       if (listing.price !== null && item.listed_price_cents === null) {
         setListedPrice.run(Math.round(listing.price * 100), item.id);
         item.listed_price_cents = Math.round(listing.price * 100);
       }
     } catch {
-      // anúncio indisponível — o artigo fica fora da montra desta vez
+      // anúncio indisponível — usamos o que houver na base
     }
   }
 
@@ -105,8 +104,9 @@ export async function exportMontra(): Promise<{ pecas: number; ficheiro: string 
 
   const pecas: MontraPeca[] = [];
   for (const item of items) {
-    if (!item.photo) continue;
-    const foto = await resolvePhoto(item);
+    const fonte = item.listing_photo ?? item.photo;
+    if (!fonte) continue;
+    const foto = await resolvePhoto(item, fonte);
     if (!foto) continue;
     pecas.push({
       id: item.id,

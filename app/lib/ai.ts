@@ -81,7 +81,8 @@ export async function generateListing(item: Item): Promise<GeneratedListing> {
     .join("\n");
 
   const content: Anthropic.ContentBlockParam[] = [];
-  const img = item.photo ? imageBlock(item.photo) : null;
+  const fotoFonte = item.listing_photo ?? item.photo;
+  const img = fotoFonte ? imageBlock(fotoFonte) : null;
   if (img) content.push(img);
   content.push({
     type: "text",
